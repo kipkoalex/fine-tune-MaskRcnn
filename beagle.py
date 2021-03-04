@@ -62,14 +62,14 @@ class CustomConfig(Config):
     Derives from the base Config class and overrides some values.
     """
     # Give the configuration a recognizable name
-    NAME = "beagle"
+    NAME = "tubePack"
 
     # We use a GPU with 12GB memory, which can fit two images.
     # Adjust down if you use a smaller GPU.
     IMAGES_PER_GPU = 1
 
     # Number of classes (including background)
-    NUM_CLASSES = 1 + 1  # Background + beagle
+    NUM_CLASSES = 1 + 1  # Background + tubePack
 
     # Number of training steps per epoch
     STEPS_PER_EPOCH = 100
@@ -85,12 +85,12 @@ class CustomConfig(Config):
 class CustomDataset(utils.Dataset):
 
     def load_custom(self, dataset_dir, subset):
-        """Load the beagle dataset.
+        """Load the tubePack dataset.
         dataset_dir: Root directory of the dataset.
         subset: Subset to load: train or val
         """
         # Add classes. We have only one class to add.
-        self.add_class("beagle", 1, "beagle")
+        self.add_class("tubePack", 1, "tubePack")
 
         # Train or validation dataset?
         assert subset in ["train", "val"]
@@ -135,7 +135,7 @@ class CustomDataset(utils.Dataset):
             height, width = image.shape[:2]
 
             self.add_image(
-                "beagle",  ## for a single class just add the name here
+                "tubePack",  ## for a single class just add the name here
                 image_id=a['filename'],  # use file name as a unique image id
                 path=image_path,
                 width=width, height=height,
@@ -148,9 +148,9 @@ class CustomDataset(utils.Dataset):
             one mask per instance.
         class_ids: a 1D array of class IDs of the instance masks.
         """
-        # If not a beagle dataset image, delegate to parent class.
+        # If not a tubePack dataset image, delegate to parent class.
         image_info = self.image_info[image_id]
-        if image_info["source"] != "beagle":
+        if image_info["source"] != "tubePack":
             return super(self.__class__, self).load_mask(image_id)
 
         # Convert polygons to a bitmap mask of shape
@@ -170,7 +170,7 @@ class CustomDataset(utils.Dataset):
     def image_reference(self, image_id):
         """Return the path of the image."""
         info = self.image_info[image_id]
-        if info["source"] == "beagle":
+        if info["source"] == "tubePack":
             return info["path"]
         else:
             super(self.__class__, self).image_reference(image_id)
