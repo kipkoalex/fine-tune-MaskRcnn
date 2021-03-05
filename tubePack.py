@@ -37,6 +37,7 @@ import cv2
 from mrcnn.visualize import display_instances
 import matplotlib.pyplot as plt
 import imgaug
+import imgaug.augmenters as iaa
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../")
@@ -194,23 +195,28 @@ def train(model):
     # COCO trained weights, we don't need to train too long. Also,
     # no need to train all layers, just the heads should do it.
     print("Training network heads")
-    augmentation = imgaug.augmenters.Sequential([
-        imgaug.augmenters.Fliplr(0.5),  # horizontally flip 50% of the images
-        imgaug.augmenters.Flipud(0.5),  # horizontally flip 50% of the images
-        imgaug.augmenters.sometimes(imgaug.augmenters.CropAndPad(
-            percent=(-0.05, 0.1),
-            pad_mode=imgaug.ALL,
-            pad_cval=(0, 255)
-        )),
-        imgaug.augmenters.sometimes(imgaug.augmenters.Affine(
-            scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},  # scale images to 80-120% of their size, individually per axis
-            translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},  # translate by -20 to +20 percent (per axis)
-            rotate=(-45, 45),  # rotate by -45 to +45 degrees
-            shear=(-16, 16),  # shear by -16 to +16 degrees
-            order=[0, 1],  # use nearest neighbour or bilinear interpolation (fast)
-            cval=(0, 255),  # if mode is constant, use a cval between 0 and 255
-            mode=imgaug.ALL  # use any of scikit-image's warping modes (see 2nd image from the top for examples)
-        )), ])
+    augmentation = iaa.Sequential([
+        iaa.Fliplr(0.5),  # horizontal flips
+        iaa.Crop(percent=(0, 0.1)),  # random crops
+        # Small gaussian blur with random sigma between 0 and 0.5.
+        # But we only blur about 50% of all images.
+        iaa.Sometimes(0.5,
+                      iaa.GaussianBlur(sigma=(0, 0.5))
+                      ),
+        # Strengthen or weaken the contrast in each image.
+        iaa.ContrastNormalization((0.75, 1.5)),
+        # Make some images brighter and some darker.
+        # In 20% of all cases, we sample the multiplier once per channel,
+        # which can end up changing the color of the images.
+        iaa.Multiply((0.8, 1.2), per_channel=0),
+        # Apply affine transformations to each image.
+        # Scale/zoom them, translate/move them, rotate them and shear them.
+        iaa.Affine(
+            scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
+            translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
+            rotate=(-10, 10),
+            shear=(-2, 2))
+    ], random_order=True)  # apply augmenters in random order
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
                 epochs=30, augmentation=augmentation,
