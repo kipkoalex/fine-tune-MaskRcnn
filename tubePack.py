@@ -211,11 +211,11 @@ def train(model):
         iaa.Multiply((0.8, 1.2), per_channel=0),
         # Apply affine transformations to each image.
         # Scale/zoom them, translate/move them, rotate them and shear them.
-        iaa.Affine(
-            scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
-            translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
-            rotate=(-10, 10),
-            shear=(-2, 2))
+        # iaa.Affine(
+        #     scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
+        #     translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
+        #     rotate=(-10, 10),
+        #     shear=(-2, 2))
     ], random_order=True)  # apply augmenters in random order
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
