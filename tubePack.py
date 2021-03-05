@@ -36,6 +36,7 @@ import skimage.draw
 import cv2
 from mrcnn.visualize import display_instances
 import matplotlib.pyplot as plt
+import imgaug
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../")
@@ -193,9 +194,22 @@ def train(model):
     # COCO trained weights, we don't need to train too long. Also,
     # no need to train all layers, just the heads should do it.
     print("Training network heads")
+	augmentation = imgaug.augmenters.Sequential([
+                    imgaug.augmenters.Fliplr(0.5),
+                    imgaug.augmenters.Flipud(0.2),
+                    #imgaug.augmenters.GaussianBlur(sigma=(0.0, 5.0))
+                    imgaug.augmenters.Sometimes(0.5,imgaug.augmenters.GaussianBlur(sigma=(0, 0.5))),
+                    imgaug.augmenters.LinearContrast((0.75, 1.5)),
+                    imgaug.augmenters.Affine(
+                      #scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
+                      #translate_percent={"x": (-0.2, 0.2), "y": (-0.2, 0.2)},
+                      rotate=(-5, 5),
+                      #shear=(-8, 8)
+                      )
+                ])
     model.train(dataset_train, dataset_val,
                 learning_rate=config.LEARNING_RATE,
-                epochs=10,
+                epochs=30, augmentation=augmentation,
                 layers='heads')
 
 
